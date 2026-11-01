@@ -3,7 +3,8 @@
   const S = window.SHARED;
   const MAP = S.buildMap();
   const $ = id => document.getElementById(id);
-  const isTouch = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+  // phone/tablet only when the main pointer is a finger; touchscreen laptops with a mouse/trackpad stay in desktop mode
+  const isTouch = window.matchMedia('(pointer: coarse)').matches || (!window.matchMedia('(any-pointer: fine)').matches && 'ontouchstart' in window && navigator.maxTouchPoints > 0);
   if (isTouch) document.body.classList.add('touch');
   const ss = { get: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { sessionStorage.setItem(k, v); } catch {} }, del: k => { try { sessionStorage.removeItem(k); } catch {} } };
   const ls = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
@@ -333,7 +334,8 @@
   });
   document.addEventListener('mousedown', e => {
     if (document.pointerLockElement === canvas) { if (e.button === 0) setFly(true); return; }
-    if (current === 'game' && !isTouch && e.target === canvas) { dragLook = { x: e.clientX, y: e.clientY }; if (e.button === 2) setFly(true); }
+    if (e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return; // synthetic mouse event from a finger
+    if (current === 'game' && e.target === canvas) { dragLook = { x: e.clientX, y: e.clientY }; if (e.button === 2) setFly(true); }
   });
   document.addEventListener('mouseup', e => { dragLook = null; if (e.button === 0 || e.button === 2) setFly(false); });
   if (inIframe) lockFailed = false; // still try pointer lock first; fall back automatically if refused
